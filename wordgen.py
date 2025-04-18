@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import random
+import argparse
 
 # Load English words from /usr/share/dict/words
 def load_english_words(filepath="/usr/share/dict/words"):
@@ -35,11 +36,20 @@ def generate_words(num_words, min_length, max_length):
 
     return words
 
-# Example usage
+# Main function with command-line argument parsing
 if __name__ == "__main__":
-    num_words = 10
-    min_length = 3
-    max_length = 8
-    generated_words = generate_words(num_words, min_length, max_length)
+    parser = argparse.ArgumentParser(description="Generate random words.")
+    parser.add_argument(
+        "-n", "--num_words", type=int, default=10, help="Number of words to generate (default: 10)"
+    )
+    parser.add_argument(
+        "-min", "--min_length", type=int, default=3, help="Minimum length of words (default: 3)"
+    )
+    parser.add_argument(
+        "-max", "--max_length", type=int, default=8, help="Maximum length of words (default: 8)"
+    )
+    args = parser.parse_args()
+
+    generated_words = generate_words(args.num_words, args.min_length, args.max_length)
     for word in generated_words:
         print(word)
