@@ -1,11 +1,12 @@
 import random
 
-def generate_words(num_words, word_length):
+def generate_words(num_words, min_length, max_length):
     vowels = 'aeiou'
     consonants = 'bcdfghjklmnpqrstvwxyz'
     words = []
 
     for _ in range(num_words):
+        word_length = random.randint(min_length, max_length)
         word = ''
         for i in range(word_length):
             if i % 2 == 0:
@@ -19,7 +20,8 @@ def generate_words(num_words, word_length):
 # Example usage
 if __name__ == "__main__":
     num_words = 10
-    word_length = 6
-    generated_words = generate_words(num_words, word_length)
+    min_length = 3
+    max_length = 8
+    generated_words = generate_words(num_words, min_length, max_length)
     for word in generated_words:
         print(word)
