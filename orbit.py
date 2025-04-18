@@ -42,12 +42,14 @@ ax.plot(0, 0, 'yo', label='Star')  # Star at the center
 line, = ax.plot([], [], 'b-', label='Orbit')
 planet, = ax.plot([], [], 'ro', label='Planet')
 
-# Set axis limits dynamically
+# Set axis limits dynamically and center on the star
 x_min, x_max = min(x_positions), max(x_positions)
 y_min, y_max = min(y_positions), max(y_positions)
 padding = 0.1 * max(x_max - x_min, y_max - y_min)  # Add 10% padding
-ax.set_xlim(x_min - padding, x_max + padding)
-ax.set_ylim(y_min - padding, y_max + padding)
+x_range = max(abs(x_min), abs(x_max)) + padding
+y_range = max(abs(y_min), abs(y_max)) + padding
+ax.set_xlim(-x_range, x_range)
+ax.set_ylim(-y_range, y_range)
 
 def init():
     line.set_data([], [])
