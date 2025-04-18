@@ -45,7 +45,7 @@ planet, = ax.plot([], [], 'ro', label='Planet')
 # Set axis limits dynamically and center on the star
 x_min, x_max = min(x_positions), max(x_positions)
 y_min, y_max = min(y_positions), max(y_positions)
-padding = 0.1 * max(x_max - x_min, y_max - y_min)  # Add 10% padding
+padding = 0.5 * max(x_max - x_min, y_max - y_min)  # Add 50% padding
 x_range = max(abs(x_min), abs(x_max)) + padding
 y_range = max(abs(y_min), abs(y_max)) + padding
 ax.set_xlim(-x_range, x_range)
@@ -59,7 +59,7 @@ def init():
 def update(frame):
     line.set_data(x_positions[:frame], y_positions[:frame])
     planet.set_data(x_positions[frame], y_positions[frame])
-    print(" x:", x_positions[frame], "y:", y_positions[frame])
+    #print(" x:", x_positions[frame], "y:", y_positions[frame])
     return line, planet
 
 ani = FuncAnimation(fig, update, frames=len(x_positions), init_func=init, blit=True, interval=20)
