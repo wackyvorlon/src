@@ -8,13 +8,23 @@ Author: Alyssa
 Date: April 18, 2025
 """
 
-import sys
+from itertools import groupby
+from operator import itemgetter
 
-def main():
-    """
-    Main function of the script.
-    """
-    print("Hello, World!")
+# Sample data: (name, department)
+employees = [
+    ("Alice", "Engineering"),
+    ("Bob", "Marketing"),
+    ("Charlie", "Engineering"),
+    ("Diana", "HR"),
+    ("Evan", "Marketing"),
+]
 
-if __name__ == "__main__":
-    main()
+# Sort by department first (groupby works on consecutive items)
+employees.sort(key=itemgetter(1))
+
+# Group by department
+for department, group in groupby(employees, key=itemgetter(1)):
+    print(f"\n{department} Department:")
+    for name, _ in group:
+        print(f"  - {name}")
