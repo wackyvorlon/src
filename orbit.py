@@ -41,8 +41,8 @@ for _ in range(num_steps):  # Simulate for one complete orbit
     y_positions.append(y)
 
 # Scale position data to 1% of original
-x_positions = [x * 0.0001 for x in x_positions]
-y_positions = [y * 0.0001 for y in y_positions]
+#x_positions = [x * 0.0001 for x in x_positions]
+#y_positions = [y * 0.0001 for y in y_positions]
 
 # Animation
 fig, ax = plt.subplots()
