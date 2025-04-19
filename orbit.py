@@ -1,5 +1,6 @@
 import numpy as np
 from matplotlib.animation import FuncAnimation
+import math
 
 import matplotlib.pyplot as plt
 
@@ -35,6 +36,10 @@ for _ in range(1000):  # Simulate for 1000 steps
     x_positions.append(x)
     y_positions.append(y)
 
+# Scale position data to 1% of original
+x_positions = [x * 0.0001 for x in x_positions]
+y_positions = [y * 0.0001 for y in y_positions]
+
 # Animation
 fig, ax = plt.subplots()
 ax.set_aspect('equal', adjustable='datalim')
@@ -59,7 +64,11 @@ def init():
 def update(frame):
     line.set_data(x_positions[:frame], y_positions[:frame])
     planet.set_data(x_positions[frame], y_positions[frame])
-    #print(" x:", x_positions[frame], "y:", y_positions[frame])
+    
+    # Calculate the angle of the planet relative to the star
+    angle = math.degrees(math.atan2(y_positions[frame], x_positions[frame]))
+    print(f"Frame {frame}: Planet angle = {angle:.2f} degrees")
+    
     return line, planet
 
 ani = FuncAnimation(fig, update, frames=len(x_positions), init_func=init, blit=True, interval=20)
