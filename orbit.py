@@ -15,7 +15,7 @@ v = 30000  # Initial velocity, m/s
 theta = 0  # Initial angle, radians
 
 # Time step
-dt = 60 * 60  # 1 hour in seconds
+dt = 2 * 60 * 60  # 2 hours in seconds
 
 # Calculate the orbital period (T) using Kepler's third law
 T = 2 * np.pi * np.sqrt(r**3 / (G * M))  # Orbital period in seconds
