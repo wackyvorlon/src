@@ -17,6 +17,10 @@ theta = 0  # Initial angle, radians
 # Time step
 dt = 60 * 60  # 1 hour in seconds
 
+# Calculate the orbital period (T) using Kepler's third law
+T = 2 * np.pi * np.sqrt(r**3 / (G * M))  # Orbital period in seconds
+num_steps = int(T / dt)  # Number of steps for one complete orbit
+
 # Lists to store positions
 x_positions = []
 y_positions = []
@@ -25,7 +29,7 @@ y_positions = []
 x, y = r, 0
 vx, vy = 0, v
 
-for _ in range(1000):  # Simulate for 1000 steps
+for _ in range(num_steps):  # Simulate for one complete orbit
     r = np.sqrt(x**2 + y**2)
     ax = -G * M * x / r**3
     ay = -G * M * y / r**3
