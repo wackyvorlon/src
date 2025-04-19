@@ -1,17 +1,27 @@
 import numpy as np
 from matplotlib.animation import FuncAnimation
 import math
-
+import argparse
 import matplotlib.pyplot as plt
+
+# Parse command-line arguments
+parser = argparse.ArgumentParser(description="Simulate a planet's orbit around a star.")
+parser.add_argument(
+    "--velocity", type=float, default=30000, help="Initial velocity of the planet in m/s (default: 30000)"
+)
+parser.add_argument(
+    "--mass", type=float, default=1.989e30, help="Mass of the star in kg (default: 1.989e30, mass of the Sun)"
+)
+args = parser.parse_args()
 
 # Constants
 G = 6.67430e-11  # Gravitational constant, m^3 kg^-1 s^-2
-M = 1.989e30     # Mass of the star (e.g., the Sun), kg
+M = args.mass    # Mass of the star, kg
 AU = 1.496e11    # Astronomical unit, m
 
 # Initial conditions
 r = AU  # Initial distance from the star, m
-v = 30000  # Initial velocity, m/s
+v = args.velocity  # Initial velocity, m/s
 theta = 0  # Initial angle, radians
 
 # Time step
@@ -41,8 +51,8 @@ for _ in range(num_steps):  # Simulate for one complete orbit
     y_positions.append(y)
 
 # Scale position data to 1% of original
-#x_positions = [x * 0.0001 for x in x_positions]
-#y_positions = [y * 0.0001 for y in y_positions]
+x_positions = [x * 0.0001 for x in x_positions]
+y_positions = [y * 0.0001 for y in y_positions]
 
 # Animation
 fig, ax = plt.subplots()
