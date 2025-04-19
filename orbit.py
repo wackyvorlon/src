@@ -71,7 +71,11 @@ def update(frame):
     
     # Calculate the angle of the planet relative to the star
     angle = math.degrees(math.atan2(y_positions[frame], x_positions[frame]))
-    print(f"Frame {frame}: Planet angle = {angle:.2f} degrees")
+    
+    # Calculate the velocity magnitude
+    velocity = np.sqrt(vx**2 + vy**2)
+    
+    print(f"Frame {frame}: Planet angle = {angle:.2f} degrees, Velocity = {velocity:.2f} m/s")
     
     return line, planet
 
