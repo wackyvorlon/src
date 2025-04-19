@@ -12,11 +12,15 @@ parser.add_argument(
 parser.add_argument(
     "--mass", type=float, default=1.989e30, help="Mass of the star in kg (default: 1.989e30, mass of the Sun)"
 )
+parser.add_argument(
+    "--planet_mass", type=float, default=5.972e24, help="Mass of the planet in kg (default: 5.972e24, mass of Earth)"
+)
 args = parser.parse_args()
 
 # Constants
 G = 6.67430e-11  # Gravitational constant, m^3 kg^-1 s^-2
 M = args.mass    # Mass of the star, kg
+m = args.planet_mass  # Mass of the planet, kg
 AU = 1.496e11    # Astronomical unit, m
 
 # Initial conditions
@@ -41,8 +45,9 @@ vx, vy = 0, v
 
 for _ in range(num_steps):  # Simulate for one complete orbit
     r = np.sqrt(x**2 + y**2)
-    ax = -G * M * x / r**3
-    ay = -G * M * y / r**3
+    force = G * M * m / r**2  # Gravitational force
+    ax = -force * x / (m * r)  # Acceleration in x-direction
+    ay = -force * y / (m * r)  # Acceleration in y-direction
     vx += ax * dt
     vy += ay * dt
     x += vx * dt
