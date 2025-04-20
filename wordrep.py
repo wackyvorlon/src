@@ -2,9 +2,16 @@ import sys
 from nltk.corpus import wordnet
 
 def get_synonym(word):
-    synonyms = wordnet.synsets(word)
+    synonyms = wordnet.synsets(word.lower())  # Use lowercase for lookup
     if synonyms:
-        return synonyms[0].lemmas()[0].name()  # Return the first synonym
+        synonym = synonyms[0].lemmas()[0].name()  # Get the first synonym
+        # Match the case of the original word
+        if word.isupper():
+            return synonym.upper()
+        elif word[0].isupper():
+            return synonym.capitalize()
+        else:
+            return synonym
     return word
 
 def replace_words_with_synonyms(input_file, output_file):
