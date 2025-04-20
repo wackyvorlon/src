@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+
+# Generate random phrases using adjectives, nouns, and verbs from WordNet
+# -*- coding: utf-8 -*-
+"""
+File: phrasegen.py
+Description: Generates random phrases using adjectives, nouns, and verbs from WordNet.
+Author: Alyssa
+Date: April 18, 2025
+"""
+
+
+
 import random
 import os
 from nltk.corpus import wordnet
