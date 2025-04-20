@@ -53,3 +53,6 @@ if __name__ == "__main__":
     pairs = generate_adjective_noun_pairs(adjectives, nouns, count=10)
     for pair in pairs:
         print(pair)
+    
+    print("\n")
+    
