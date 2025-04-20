@@ -8,7 +8,7 @@ def get_synonym(word):
 
     synonyms = wordnet.synsets(word.lower())  # Use lowercase for lookup
     if synonyms:
-        synonym = synonyms[0].lemmas()[0].name()  # Get the first synonym
+        synonym = synonyms[0].lemmas()[0].name().replace('_', ' ')  # Replace underscores with spaces
         # Match the case of the original word
         if word.isupper():
             return synonym.upper()
