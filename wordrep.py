@@ -3,7 +3,7 @@ from nltk.corpus import wordnet
 
 def get_synonym(word):
     # Leave words with three letters or less unchanged
-    if len(word) <= 3:
+    if len(word) <= 3 or word.lower() == "have":
         return word
 
     synonyms = wordnet.synsets(word.lower())  # Use lowercase for lookup
