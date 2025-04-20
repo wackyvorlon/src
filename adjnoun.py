@@ -7,7 +7,6 @@ Author: Alyssa
 Date: April 18, 2025
 """
 
-
 import random
 import os
 from nltk.corpus import wordnet
@@ -24,8 +23,14 @@ def generate_adjective_noun_pairs(adjectives, nouns, count=10):
     """Generate random adjective-noun pairs."""
     pairs = []
     for _ in range(count):
-        adjective = random.choice(adjectives)
-        noun = random.choice(nouns)
+        while True:
+            adjective = random.choice(adjectives)
+            if len(adjective) > 2:  # Ensure adjective is more than 2 letters
+                break
+        while True:
+            noun = random.choice(nouns)
+            if len(noun) > 2:  # Ensure noun is more than 2 letters
+                break
         pairs.append(f"{adjective} {noun}")
     return pairs
 
