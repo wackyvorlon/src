@@ -2,6 +2,10 @@ import sys
 from nltk.corpus import wordnet
 
 def get_synonym(word):
+    # Leave words with three letters or less unchanged
+    if len(word) <= 3:
+        return word
+
     synonyms = wordnet.synsets(word.lower())  # Use lowercase for lookup
     if synonyms:
         synonym = synonyms[0].lemmas()[0].name()  # Get the first synonym
