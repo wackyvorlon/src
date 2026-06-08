@@ -17,20 +17,44 @@ def get_verbs_from_wordnet(count=20):
     
     return sorted(list(verbs))
 
+def get_adjectives_from_wordnet(count=20):
+    """Extract adjectives from wordnet suitable for fantasy titles."""
+    adjectives = set()
+    
+    # Get all adjective synsets and extract base adjective forms
+    for synset in wordnet.all_synsets(wordnet.ADJ):
+        for lemma in synset.lemmas():
+            adj = lemma.name().replace('_', ' ').capitalize()
+            # Filter for meaningful adjectives (3-12 characters)
+            if 3 <= len(adj) <= 12 and adj not in adjectives:
+                adjectives.add(adj)
+                if len(adjectives) >= count:
+                    return sorted(list(adjectives))
+    
+    return sorted(list(adjectives))
+
+def get_nouns_from_wordnet(count=20):
+    """Extract nouns from wordnet suitable for fantasy titles."""
+    nouns = set()
+    
+    # Get all noun synsets and extract base noun forms
+    for synset in wordnet.all_synsets(wordnet.NOUN):
+        for lemma in synset.lemmas():
+            noun = lemma.name().replace('_', ' ').capitalize()
+            # Filter for meaningful nouns (4-15 characters)
+            if 4 <= len(noun) <= 15 and noun not in nouns:
+                nouns.add(noun)
+                if len(nouns) >= count:
+                    return sorted(list(nouns))
+    
+    return sorted(list(nouns))
+
 def generate_fantasy_book_titles(count=10):
     """Generate random fantasy book titles."""
     
-    adjectives = [
-        "The Dark", "The Lost", "The Forgotten", "The Crimson",
-        "The Eternal", "The Shattered", "The Cursed", "The Hidden",
-        "The Broken", "The Silent", "The Ancient", "The Mystic"
-    ]
+    adjectives = ["The " + adj for adj in get_adjectives_from_wordnet(30)]
     
-    nouns = [
-        "Kingdom", "Realm", "Crown", "Throne", "Tower", "Gate",
-        "Prophecy", "Curse", "Dragon", "Phoenix", "Spell", "Artifact",
-        "Sword", "Stone", "Shadow", "Light", "Forest", "Mountain"
-    ]
+    nouns = get_nouns_from_wordnet(30)
     
     suffixes = [
         "of Power", "of Legends", "Rising", "Awakening", "Chronicles",
@@ -43,25 +67,33 @@ def generate_fantasy_book_titles(count=10):
     while len(titles) < count:
         # Generate different title formats for variety
         style = random.choice(range(6))
+        suffix = random.choice(suffixes)
         
         if style == 0:
-            # Format: "Adjective Noun: Suffix"
-            title = f"{random.choice(adjectives)} {random.choice(nouns)}: {random.choice(suffixes)}"
+            # Format: "Adjective Noun: Suffix" or "Adjective Noun Suffix" (no colon if suffix starts with "of")
+            if suffix.startswith("of"):
+                title = f"{random.choice(adjectives)} {random.choice(nouns)} {suffix}"
+            else:
+                title = f"{random.choice(adjectives)} {random.choice(nouns)}: {suffix}"
         elif style == 1:
             # Format: "Adjective Noun"
             title = f"{random.choice(adjectives)} {random.choice(nouns)}"
         elif style == 2:
             # Format: "Adjective Noun Suffix" (no colon)
-            title = f"{random.choice(adjectives)} {random.choice(nouns)} {random.choice(suffixes)}"
+            title = f"{random.choice(adjectives)} {random.choice(nouns)} {suffix}"
         elif style == 3:
             # Format: "Noun of Suffix"
-            title = f"{random.choice(nouns)} {random.choice(suffixes)}"
+            title = f"{random.choice(nouns)} {suffix}"
         elif style == 4:
             # Format: "Adjective Noun Verb"
             title = f"{random.choice(adjectives)} {random.choice(nouns)} {random.choice(verbs)}"
         else:
-            # Format: "Noun: Adjective Suffix"
-            title = f"{random.choice(nouns)}: {random.choice(adjectives).replace('The ', '')} {random.choice(suffixes)}"
+            # Format: "Noun: Adjective Suffix" or "Noun Adjective Suffix" (no colon if suffix starts with "of")
+            adj_clean = random.choice(adjectives).replace('The ', '')
+            if suffix.startswith("of"):
+                title = f"{random.choice(nouns)} {adj_clean} {suffix}"
+            else:
+                title = f"{random.choice(nouns)}: {adj_clean} {suffix}"
         
         titles.add(title)
     
