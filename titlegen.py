@@ -1,4 +1,21 @@
 import random
+from nltk.corpus import wordnet
+
+def get_verbs_from_wordnet(count=20):
+    """Extract action verbs from wordnet suitable for fantasy titles."""
+    verbs = set()
+    
+    # Get all verb synsets and extract base verb forms
+    for synset in wordnet.all_synsets(wordnet.VERB):
+        for lemma in synset.lemmas():
+            verb = lemma.name().replace('_', ' ').capitalize()
+            # Filter for shorter, more impactful verbs (2-3 syllables typically)
+            if 4 <= len(verb) <= 15 and verb not in verbs:
+                verbs.add(verb)
+                if len(verbs) >= count:
+                    return sorted(list(verbs))
+    
+    return sorted(list(verbs))
 
 def generate_fantasy_book_titles(count=10):
     """Generate random fantasy book titles."""
@@ -20,9 +37,7 @@ def generate_fantasy_book_titles(count=10):
         "Saga", "Wars", "Quest", "Return", "Ascension", "Reckoning"
     ]
     
-    verbs = [
-        "Rises", "Falls", "Awakens", "Emerges", "Transforms", "Unleashed"
-    ]
+    verbs = get_verbs_from_wordnet(30)
     
     titles = set()
     while len(titles) < count:
