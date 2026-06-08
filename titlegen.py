@@ -20,9 +20,34 @@ def generate_fantasy_book_titles(count=10):
         "Saga", "Wars", "Quest", "Return", "Ascension", "Reckoning"
     ]
     
+    verbs = [
+        "Rises", "Falls", "Awakens", "Emerges", "Transforms", "Unleashed"
+    ]
+    
     titles = set()
     while len(titles) < count:
-        title = f"{random.choice(adjectives)} {random.choice(nouns)}: {random.choice(suffixes)}"
+        # Generate different title formats for variety
+        style = random.choice(range(6))
+        
+        if style == 0:
+            # Format: "Adjective Noun: Suffix"
+            title = f"{random.choice(adjectives)} {random.choice(nouns)}: {random.choice(suffixes)}"
+        elif style == 1:
+            # Format: "Adjective Noun"
+            title = f"{random.choice(adjectives)} {random.choice(nouns)}"
+        elif style == 2:
+            # Format: "Adjective Noun Suffix" (no colon)
+            title = f"{random.choice(adjectives)} {random.choice(nouns)} {random.choice(suffixes)}"
+        elif style == 3:
+            # Format: "Noun of Suffix"
+            title = f"{random.choice(nouns)} {random.choice(suffixes)}"
+        elif style == 4:
+            # Format: "Adjective Noun Verb"
+            title = f"{random.choice(adjectives)} {random.choice(nouns)} {random.choice(verbs)}"
+        else:
+            # Format: "Noun: Adjective Suffix"
+            title = f"{random.choice(nouns)}: {random.choice(adjectives).replace('The ', '')} {random.choice(suffixes)}"
+        
         titles.add(title)
     
     return sorted(list(titles))
