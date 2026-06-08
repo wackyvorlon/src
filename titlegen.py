@@ -49,6 +49,46 @@ def get_nouns_from_wordnet(count=20):
     
     return sorted(list(nouns))
 
+def title_case(text):
+    """Return a properly capitalized title string."""
+    small_words = {
+        "a", "an", "and", "as", "at", "but", "by", "for",
+        "from", "in", "of", "on", "or", "the", "to", "with"
+    }
+
+    words = text.split()
+    result = []
+    prev_token = ""
+
+    for index, word in enumerate(words):
+        raw = word
+        prefix = ""
+        suffix = ""
+
+        while raw and not raw[0].isalnum():
+            prefix += raw[0]
+            raw = raw[1:]
+        while raw and not raw[-1].isalnum():
+            suffix = raw[-1] + suffix
+            raw = raw[:-1]
+
+        lower_word = raw.lower()
+        should_capitalize = (
+            index == 0
+            or prev_token.endswith(":")
+            or lower_word not in small_words
+        )
+
+        if should_capitalize:
+            raw = raw.capitalize()
+        else:
+            raw = lower_word
+
+        result.append(f"{prefix}{raw}{suffix}")
+        prev_token = word
+
+    return " ".join(result)
+
 def generate_fantasy_book_titles(count=10):
     """Generate random fantasy book titles."""
     
@@ -95,6 +135,7 @@ def generate_fantasy_book_titles(count=10):
             else:
                 title = f"{random.choice(nouns)}: {adj_clean} {suffix}"
         
+        title = title_case(title)
         titles.add(title)
     
     return sorted(list(titles))
