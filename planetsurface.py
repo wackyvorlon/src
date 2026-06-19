@@ -28,8 +28,11 @@ def deterministic_base_terrain(shape, seed=0):
 
     ocean_depth = -0.16 * np.exp(-((x + 0.75) ** 2 * 4.2 + (y - 0.5) ** 2 * 4.6))
     coast = np.exp(-((np.clip(continent_mask - 0.3, 0.0, 1.0)) ** 2) * 30.0) * -0.02
+    detail = (np.sin(18.3 * x + 14.2 * y + phase * 1.8) * np.cos(9.1 * x - 11.7 * y - phase) * 0.014
+              + np.sin(26.1 * x - 8.7 * y + phase * 1.3) * np.cos(12.4 * x + 16.2 * y - phase * 1.5) * 0.009)
     base = land + ocean_depth - 0.08 * (1.0 - continent_mask) + coast
     base += np.sin(5.8 * x + phase * 1.1) * 0.015 * continent_mask
+    base += detail * continent_mask * 0.9
     return base
 
 
@@ -73,6 +76,22 @@ def simulate_erosion(heightmap, iterations=20, talus=0.010):
 
         h = np.minimum(h, np.maximum(np.roll(h, 1, axis=1), np.roll(h, 1, axis=0)))
 
+    return h
+
+
+def add_surface_detail(heightmap, seed=0, strength=0.028):
+    h = heightmap.copy()
+    height, width = h.shape
+    y = np.linspace(-1.0, 1.0, height)[:, None]
+    x = np.linspace(-1.0, 1.0, width)[None, :]
+    phase = (seed % 19) * 0.27
+
+    micro = (np.sin(24.1 * x + 18.7 * y + phase * 1.9) * np.cos(11.4 * x - 10.3 * y - phase * 0.8) * 0.014
+           + np.sin(16.2 * x - 13.7 * y + phase * 1.2) * np.cos(9.7 * x + 20.5 * y - phase * 1.4) * 0.008)
+    ridge_detail = np.sin(8.4 * x + 6.9 * y + phase * 1.5) * 0.009
+    micro += ridge_detail * np.clip(h * 1.4, 0.0, 1.0)
+
+    h += micro * np.clip(np.abs(h - 0.45) + 0.2, 0.2, 1.0) * strength
     return h
 
 
@@ -143,7 +162,8 @@ def create_planet_surface_map(size=512, seed=42):
     volcanic = add_volcanic_features(tectonic, count=15, height_strength=0.15, seed=seed + 1)
     rivered = carve_rivers(volcanic, seed=seed + 2, strength=0.05)
     eroded = simulate_erosion(rivered, iterations=14, talus=0.012)
-    final = normalize(eroded)
+    detailed = add_surface_detail(eroded, seed=seed + 3, strength=0.028)
+    final = normalize(detailed)
     return final
 
 
@@ -151,17 +171,18 @@ def create_planet_colormap():
     from matplotlib.colors import LinearSegmentedColormap
 
     colors = [
-        (0.00, "#04182b"),
-        (0.10, "#0a3662"),
-        (0.20, "#1d6fcf"),
-        (0.32, "#82b5ec"),
-        (0.40, "#d9d6c4"),
-        (0.50, "#9fb46f"),
-        (0.65, "#5a7a49"),
-        (0.78, "#7b663c"),
-        (0.88, "#b2996b"),
-        (0.97, "#ded6dc"),
-        (1.00, "#ffffff"),
+        (0.00, "#021423"),
+        (0.08, "#0f3a66"),
+        (0.18, "#1f6db3"),
+        (0.28, "#70a6db"),
+        (0.36, "#cfdde8"),
+        (0.42, "#e6d5b1"),
+        (0.50, "#8aa85c"),
+        (0.62, "#5f7a42"),
+        (0.72, "#7f6541"),
+        (0.82, "#b18d5f"),
+        (0.90, "#d9c9b4"),
+        (1.00, "#f6f6f3"),
     ]
     return LinearSegmentedColormap.from_list("planet_terrain", colors)
 
@@ -178,7 +199,7 @@ def plot_surface_map(heightmap, filename="planet_surface_map.png"):
 
 
 if __name__ == "__main__":
-    map_size = 1024
+    map_size = 1536
     seed = 2026
     surface_map = create_planet_surface_map(size=map_size, seed=seed)
     plot_surface_map(surface_map)
