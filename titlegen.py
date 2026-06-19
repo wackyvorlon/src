@@ -1,5 +1,9 @@
+
+# A script to randomly generate fantasy book titles.
+
 import random
 from nltk.corpus import wordnet
+
 
 def get_verbs_from_wordnet(count=20):
     """Extract action verbs from wordnet suitable for fantasy titles."""

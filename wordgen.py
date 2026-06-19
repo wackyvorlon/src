@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+# A script to generate random words, ensuring that the generated words are not actual English words. 
+# The script loads a list of English words from a specified file and generates random words by alternating consonants and vowels. 
+# The generated words are printed to the console, and the script includes command-line arguments for specifying the number of words 
+# to generate and their length range.
+
+
 import random
 import argparse
 

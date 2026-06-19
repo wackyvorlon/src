@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*- 
+# Script to generate random adjective-noun pairs using WordNet, ensuring that the words are more than 2 letters long. 
+# The script checks for the presence of the nltk_data directory before attempting to download WordNet data, and handles
+# any exceptions that may occur during the download process. The generated pairs are printed to the console.
+
 """
 File: adjnoun.py
 Description: Generates random adjective-noun pairs using WordNet.

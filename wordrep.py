@@ -1,3 +1,7 @@
+# Replaces words in a text file with their synonyms, except for words with three letters or less and the word "have". 
+# The output is written to a new file.
+
+
 import sys
 from nltk.corpus import wordnet
 
