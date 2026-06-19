@@ -2,6 +2,11 @@ import argparse
 import numpy as np
 from PIL import Image
 
+# Script to generate a deterministic planetary surface map using procedural generation techniques.
+# The script creates a heightmap with features such as continents, mountains, rivers, and volcanic
+# formations, and applies shading and color mapping to produce a visually appealing image of a planet's surface.
+#
+# It doesn't work that well.
 
 def deterministic_base_terrain(shape, seed=0):
     height, width = shape
