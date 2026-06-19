@@ -223,6 +223,31 @@ def _hex_to_rgb(hex_string):
     return tuple(int(hex_string[i:i+2], 16) for i in (0, 2, 4))
 
 
+def compute_hillshade(heightmap, azimuth=np.pi * 0.42, altitude=np.pi * 0.45, zscale=1.0):
+    dy, dx = np.gradient(heightmap * zscale)
+    slope = np.pi / 2.0 - np.arctan(np.sqrt(dx ** 2 + dy ** 2))
+    aspect = np.arctan2(dy, -dx)
+    shaded = (
+        np.sin(altitude) * np.sin(slope)
+        + np.cos(altitude) * np.cos(slope) * np.cos(azimuth - aspect)
+    )
+    return np.clip(shaded, 0.0, 1.0)
+
+
+def apply_image_shadows(
+    image_array,
+    heightmap,
+    intensity=0.65,
+    ambient=0.35,
+    azimuth=np.pi * 0.42,
+    altitude=np.pi * 0.45,
+):
+    shade = compute_hillshade(heightmap, azimuth=azimuth, altitude=altitude)
+    lighting = ambient + (1.0 - ambient) * shade
+    lighting = np.clip(lighting * intensity + (1.0 - intensity), 0.0, 1.0)
+    return np.clip(image_array.astype(np.float32) * lighting[:, :, None], 0, 255).astype(np.uint8)
+
+
 def create_planet_colormap():
     colors = [
         (0.00, "#021423"),
@@ -243,14 +268,29 @@ def create_planet_colormap():
     return positions, palette
 
 
-def plot_surface_map(heightmap, filename="planet_surface_map.png"):
+def plot_surface_map(
+    heightmap,
+    filename="planet_surface_map.png",
+    shadow_intensity=0.75,
+    shadow_ambient=0.35,
+    shadow_azimuth=np.pi * 0.42,
+    shadow_altitude=np.pi * 0.45,
+):
     positions, palette = create_planet_colormap()
     flat = heightmap.flatten()
     r = np.interp(flat, positions, palette[:, 0]).astype(np.uint8)
     g = np.interp(flat, positions, palette[:, 1]).astype(np.uint8)
     b = np.interp(flat, positions, palette[:, 2]).astype(np.uint8)
     image_array = np.stack((r, g, b), axis=-1).reshape(heightmap.shape[0], heightmap.shape[1], 3)
-    image = Image.fromarray(image_array, mode="RGB")
+    shaded_image = apply_image_shadows(
+        image_array,
+        heightmap,
+        intensity=shadow_intensity,
+        ambient=shadow_ambient,
+        azimuth=shadow_azimuth,
+        altitude=shadow_altitude,
+    )
+    image = Image.fromarray(shaded_image, mode="RGB")
     image.save(filename)
 
 
@@ -267,6 +307,10 @@ def parse_args():
     parser.add_argument("--erosion-talus", type=float, default=0.012, help="Talus threshold for erosion")
     parser.add_argument("--detail-strength", type=float, default=0.028, help="Strength of surface micro-detail")
     parser.add_argument("--shadow-strength", type=float, default=0.035, help="Strength of ridge shadowing")
+    parser.add_argument("--shadow-intensity", type=float, default=0.75, help="Image shadow intensity")
+    parser.add_argument("--shadow-ambient", type=float, default=0.35, help="Ambient light factor for shadows")
+    parser.add_argument("--shadow-azimuth", type=float, default=0.42, help="Sun azimuth in radians for shadow direction")
+    parser.add_argument("--shadow-altitude", type=float, default=0.45, help="Sun altitude in radians for shadow elevation")
     parser.add_argument("--sharpen-strength", type=float, default=0.18, help="Amount of sharpening applied")
     parser.add_argument("--contrast-factor", type=float, default=1.18, help="Contrast boost factor after sharpening")
     parser.add_argument("--output", type=str, default="planet_surface_map.png", help="Output image filename")
@@ -290,5 +334,12 @@ if __name__ == "__main__":
         sharpen_strength=args.sharpen_strength,
         contrast_factor=args.contrast_factor,
     )
-    plot_surface_map(surface_map, filename=args.output)
+    plot_surface_map(
+        surface_map,
+        filename=args.output,
+        shadow_intensity=args.shadow_intensity,
+        shadow_ambient=args.shadow_ambient,
+        shadow_azimuth=args.shadow_azimuth,
+        shadow_altitude=args.shadow_altitude,
+    )
     print(f"Generated planetary surface map of size {args.size}x{args.size} and saved to {args.output}")
