@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+from PIL import Image
 
 
 def deterministic_base_terrain(shape, seed=0):
@@ -191,9 +191,12 @@ def apply_ridge_shadows(heightmap, light_angle=np.pi * 0.42, strength=0.035):
     return heightmap - dark + bright
 
 
-def create_planet_colormap():
-    from matplotlib.colors import LinearSegmentedColormap
+def _hex_to_rgb(hex_string):
+    hex_string = hex_string.lstrip("#")
+    return tuple(int(hex_string[i:i+2], 16) for i in (0, 2, 4))
 
+
+def create_planet_colormap():
     colors = [
         (0.00, "#021423"),
         (0.08, "#0f3a66"),
@@ -208,22 +211,24 @@ def create_planet_colormap():
         (0.90, "#d9c9b4"),
         (1.00, "#f6f6f3"),
     ]
-    return LinearSegmentedColormap.from_list("planet_terrain", colors)
+    positions = np.array([position for position, _ in colors], dtype=float)
+    palette = np.array([_hex_to_rgb(color) for _, color in colors], dtype=np.uint8)
+    return positions, palette
 
 
 def plot_surface_map(heightmap, filename="planet_surface_map.png"):
-    cmap = create_planet_colormap()
-    plt.figure(figsize=(10, 10), dpi=120)
-    plt.imshow(heightmap, cmap=cmap, origin="lower")
-    plt.axis("off")
-    plt.title("Simulated Planetary Surface")
-    plt.tight_layout()
-    plt.savefig(filename, bbox_inches="tight", pad_inches=0.1)
-    plt.close()
+    positions, palette = create_planet_colormap()
+    flat = heightmap.flatten()
+    r = np.interp(flat, positions, palette[:, 0]).astype(np.uint8)
+    g = np.interp(flat, positions, palette[:, 1]).astype(np.uint8)
+    b = np.interp(flat, positions, palette[:, 2]).astype(np.uint8)
+    image_array = np.stack((r, g, b), axis=-1).reshape(heightmap.shape[0], heightmap.shape[1], 3)
+    image = Image.fromarray(image_array, mode="RGB")
+    image.save(filename)
 
 
 if __name__ == "__main__":
-    map_size = 1536
+    map_size = 4096
     seed = 2026
     surface_map = create_planet_surface_map(size=map_size, seed=seed)
     plot_surface_map(surface_map)
