@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 from PIL import Image
 
@@ -155,17 +156,36 @@ def add_volcanic_features(heightmap, count=10, height_strength=0.18, seed=0):
     return h
 
 
-def create_planet_surface_map(size=512, seed=42):
+def create_planet_surface_map(
+    size=512,
+    seed=42,
+    plates=8,
+    plate_strength=0.18,
+    volcanic_count=15,
+    volcanic_strength=0.15,
+    river_strength=0.05,
+    erosion_iterations=14,
+    erosion_talus=0.012,
+    detail_strength=0.028,
+    shadow_strength=0.035,
+    sharpen_strength=0.18,
+    contrast_factor=1.18,
+):
     base = deterministic_base_terrain((size, size), seed=seed)
     base = normalize(base)
-    tectonic = apply_plate_tectonics(base, strength=0.18, plates=8, seed=seed)
-    volcanic = add_volcanic_features(tectonic, count=15, height_strength=0.15, seed=seed + 1)
-    rivered = carve_rivers(volcanic, seed=seed + 2, strength=0.05)
-    eroded = simulate_erosion(rivered, iterations=14, talus=0.012)
-    detailed = add_surface_detail(eroded, seed=seed + 3, strength=0.028)
-    shadowed = apply_ridge_shadows(detailed, light_angle=np.pi * 0.42, strength=0.035)
-    sharpened = apply_sharpening(shadowed, strength=0.18)
-    contrasted = apply_contrast_boost(sharpened, factor=1.18)
+    tectonic = apply_plate_tectonics(base, strength=plate_strength, plates=plates, seed=seed)
+    volcanic = add_volcanic_features(
+        tectonic,
+        count=volcanic_count,
+        height_strength=volcanic_strength,
+        seed=seed + 1,
+    )
+    rivered = carve_rivers(volcanic, seed=seed + 2, strength=river_strength)
+    eroded = simulate_erosion(rivered, iterations=erosion_iterations, talus=erosion_talus)
+    detailed = add_surface_detail(eroded, seed=seed + 3, strength=detail_strength)
+    shadowed = apply_ridge_shadows(detailed, light_angle=np.pi * 0.42, strength=shadow_strength)
+    sharpened = apply_sharpening(shadowed, strength=sharpen_strength)
+    contrasted = apply_contrast_boost(sharpened, factor=contrast_factor)
     final = normalize(contrasted)
     return final
 
@@ -234,9 +254,41 @@ def plot_surface_map(heightmap, filename="planet_surface_map.png"):
     image.save(filename)
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Generate a deterministic planetary surface map.")
+    parser.add_argument("--size", type=int, default=4096, help="Output image width and height in pixels")
+    parser.add_argument("--seed", type=int, default=2026, help="Deterministic seed for terrain generation")
+    parser.add_argument("--plates", type=int, default=8, help="Number of tectonic plates")
+    parser.add_argument("--plate-strength", type=float, default=0.18, help="Strength of plate tectonics influence")
+    parser.add_argument("--volcanic-count", type=int, default=15, help="Number of volcanic features")
+    parser.add_argument("--volcanic-strength", type=float, default=0.15, help="Height strength of volcanic features")
+    parser.add_argument("--river-strength", type=float, default=0.05, help="Strength of river carving")
+    parser.add_argument("--erosion-iterations", type=int, default=14, help="Number of erosion smoothing iterations")
+    parser.add_argument("--erosion-talus", type=float, default=0.012, help="Talus threshold for erosion")
+    parser.add_argument("--detail-strength", type=float, default=0.028, help="Strength of surface micro-detail")
+    parser.add_argument("--shadow-strength", type=float, default=0.035, help="Strength of ridge shadowing")
+    parser.add_argument("--sharpen-strength", type=float, default=0.18, help="Amount of sharpening applied")
+    parser.add_argument("--contrast-factor", type=float, default=1.18, help="Contrast boost factor after sharpening")
+    parser.add_argument("--output", type=str, default="planet_surface_map.png", help="Output image filename")
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
-    map_size = 4096
-    seed = 2026
-    surface_map = create_planet_surface_map(size=map_size, seed=seed)
-    plot_surface_map(surface_map)
-    print(f"Generated planetary surface map of size {map_size}x{map_size} and saved to planet_surface_map.png")
+    args = parse_args()
+    surface_map = create_planet_surface_map(
+        size=args.size,
+        seed=args.seed,
+        plates=args.plates,
+        plate_strength=args.plate_strength,
+        volcanic_count=args.volcanic_count,
+        volcanic_strength=args.volcanic_strength,
+        river_strength=args.river_strength,
+        erosion_iterations=args.erosion_iterations,
+        erosion_talus=args.erosion_talus,
+        detail_strength=args.detail_strength,
+        shadow_strength=args.shadow_strength,
+        sharpen_strength=args.sharpen_strength,
+        contrast_factor=args.contrast_factor,
+    )
+    plot_surface_map(surface_map, filename=args.output)
+    print(f"Generated planetary surface map of size {args.size}x{args.size} and saved to {args.output}")
