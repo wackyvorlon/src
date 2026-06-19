@@ -7,23 +7,29 @@ def deterministic_base_terrain(shape, seed=0):
     y = np.linspace(-1.0, 1.0, height)[:, None]
     x = np.linspace(-1.0, 1.0, width)[None, :]
 
-    phase = (seed % 31) * 0.21
-    continent = np.tanh(2.4 * (np.sin(1.85 * x + phase * 0.6) + np.cos(1.6 * y - phase * 0.9))) * 0.24
-    island = np.tanh(1.9 * (np.sin(2.6 * y + phase * 0.4) + np.cos(2.1 * x - phase * 0.7))) * 0.16
-    ridges = np.sin(5.8 * x + 3.7 * y + phase * 0.8) * 0.08
-    mountain_brush = np.exp(-((x - 0.25) ** 2 + (y + 0.18) ** 2) * 14.0) * 0.18
-    mountain_brush += np.exp(-((x + 0.4) ** 2 + (y - 0.35) ** 2) * 18.0) * 0.14
-    basin = np.exp(-((x * 0.9) ** 2 + (y * 0.75) ** 2) * 3.2) * 0.22
-    equator_band = np.clip(1.0 - np.abs(y) * 1.55, 0.0, 1.0) * 0.10
+    phase = (seed % 19) * 0.28
+    continent_centers = [(-0.55, 0.30), (0.45, -0.18), (-0.15, -0.65), (0.22, 0.55)]
+    continent = np.zeros((height, width), dtype=float)
+    for i, (cx, cy) in enumerate(continent_centers):
+        strength = 0.20 + 0.06 * np.cos(1.7 * i + phase * 0.9)
+        spread = 3.2 + 0.5 * np.sin(0.8 * i + phase * 1.0)
+        continent += np.exp(-(((x - cx) * spread) ** 2 + ((y - cy) * (spread * 0.8)) ** 2)) * strength
 
-    river_carve = -np.exp(-((x * 1.3 - np.sin(1.7 * y + phase * 0.7) * 0.35) ** 2) * 18.0) * 0.06
-    valley_arm = -np.exp(-((x * 1.05 + 0.35) ** 2 + (y * 1.2 - 0.28) ** 2) * 16.0) * 0.05
+    arc_belts = np.exp(-((x + 0.1) ** 2 * 10.0 + (y - 0.3) ** 2 * 18.0)) * 0.14
+    arc_belts += np.exp(-((x - 0.2) ** 2 * 12.0 + (y + 0.35) ** 2 * 16.0)) * 0.12
+    ridge_chain = np.tanh(4.0 * (np.sin(2.5 * x + 1.9 * y + phase) + np.cos(1.8 * x - 2.3 * y - phase * 0.7))) * 0.08
 
-    ocean_mask = np.clip(1.05 - (np.abs(x) ** 2 * 1.1 + np.abs(y) ** 2 * 1.35), 0.0, 1.0)
-    terrain = continent * 0.55 + island * 0.3 + ridges * 0.6 + basin + mountain_brush + equator_band
-    terrain += river_carve + valley_arm
+    mountain_peaks = np.exp(-((x + 0.42) ** 2 * 18.0 + (y + 0.05) ** 2 * 18.0)) * 0.24
+    mountain_peaks += np.exp(-((x - 0.32) ** 2 * 16.0 + (y - 0.4) ** 2 * 15.0)) * 0.20
+    highlands = np.exp(-((x - 0.03) ** 2 * 8.0 + (y + 0.5) ** 2 * 12.0)) * 0.12
 
-    base = terrain * ocean_mask + (ocean_mask * -0.08)
+    continent_mask = np.clip(continent + 0.06 * np.sin(2.8 * x + phase * 0.7) - np.abs(y) * 0.18, 0.0, 1.0)
+    land = continent_mask * (0.08 + ridge_chain + mountain_peaks + mountain_peaks * 0.4 + arc_belts + highlands)
+
+    ocean_depth = -0.16 * np.exp(-((x + 0.75) ** 2 * 4.2 + (y - 0.5) ** 2 * 4.6))
+    coast = np.exp(-((np.clip(continent_mask - 0.3, 0.0, 1.0)) ** 2) * 30.0) * -0.02
+    base = land + ocean_depth - 0.08 * (1.0 - continent_mask) + coast
+    base += np.sin(5.8 * x + phase * 1.1) * 0.015 * continent_mask
     return base
 
 
@@ -35,30 +41,22 @@ def normalize(heightmap):
 
 def apply_plate_tectonics(heightmap, strength=0.12, plates=6, seed=0):
     height, width = heightmap.shape
+    y = np.linspace(-1.0, 1.0, height)[:, None]
+    x = np.linspace(-1.0, 1.0, width)[None, :]
     plate_map = np.zeros_like(heightmap)
-    y_coords = np.arange(height)[:, None]
-    x_coords = np.arange(width)[None, :]
-    max_dim = max(height, width)
+    plate_angles = 2 * np.pi * (np.arange(plates) / plates) + (seed % 17) * 0.14
 
-    for i in range(plates):
-        angle = 2 * np.pi * (i / plates) + (seed % 11) * 0.17
-        radius = 0.16 + 0.07 * ((i % 3) - 1)
-        cy = (0.3 + 0.4 * np.sin(angle * 0.9)) * (height - 1)
-        cx = (0.3 + 0.4 * np.cos(angle * 0.9)) * (width - 1)
-
-        plate_distance = np.hypot(y_coords - cy, x_coords - cx)
-        direction = np.cos(angle) * (x_coords - cx) + np.sin(angle) * (y_coords - cy)
-        boundary = np.sin(plate_distance / max_dim * 6.5 + angle) * np.cos(direction / max_dim * 5.2)
-        uplift = np.tanh(boundary * 2.4) * strength * 0.9
-        core = np.exp(-plate_distance ** 2 / (0.28 * max_dim) ** 2) * (0.06 + 0.03 * np.cos(angle * 1.1))
-        taper = np.exp(-plate_distance / (0.30 * max_dim))
-
-        plate_map += (uplift + core) * taper
+    for angle in plate_angles:
+        line = (x * np.cos(angle) + y * np.sin(angle))
+        boundary = np.tanh(np.sin(5.1 * line + angle * 1.3))
+        uplift = np.exp(-((line - 0.05 * np.sin(angle * 0.8)) ** 2) * 16.0) * 0.10
+        trench = -np.exp(-((line + 0.18 * np.cos(angle * 0.9)) ** 2) * 20.0) * 0.04
+        plate_map += (uplift * boundary + trench * (1.0 - np.abs(boundary))) * strength
 
     return heightmap + plate_map
 
 
-def simulate_erosion(heightmap, iterations=16, talus=0.010):
+def simulate_erosion(heightmap, iterations=20, talus=0.010):
     h = heightmap.copy()
     for _ in range(iterations):
         east = np.roll(h, -1, axis=1)
@@ -75,6 +73,30 @@ def simulate_erosion(heightmap, iterations=16, talus=0.010):
 
         h = np.minimum(h, np.maximum(np.roll(h, 1, axis=1), np.roll(h, 1, axis=0)))
 
+    return h
+
+
+def carve_rivers(heightmap, seed=0, strength=0.045):
+    h = heightmap.copy()
+    height, width = h.shape
+    y = np.linspace(0.0, 1.0, height)[:, None]
+    x = np.linspace(0.0, 1.0, width)[None, :]
+
+    phase = (seed % 29) * 0.23
+    main_river_x = 0.46 + 0.24 * np.sin(2.0 * np.pi * y * 1.45 + phase)
+    tributary_x = 0.68 + 0.16 * np.sin(2.0 * np.pi * y * 1.05 - phase * 0.9)
+    braided_x = 0.25 + 0.14 * np.sin(4.4 * y + phase * 1.05)
+
+    main_channel = np.exp(-((x - main_river_x) ** 2) * 160.0) * np.exp(-((y - 0.14) ** 2) * 12.0)
+    tributary_channel = np.exp(-((x - tributary_x) ** 2) * 180.0) * np.exp(-((y - 0.60) ** 2) * 18.0)
+    braided_channel = np.exp(-((x - braided_x) ** 2) * 180.0) * np.exp(-((y - 0.78) ** 2) * 10.0)
+
+    river_depth = main_channel + tributary_channel * 0.7 + braided_channel * 0.5
+    river_cuts = np.clip(river_depth - 0.02, 0.0, 1.0) * strength * np.exp(-((h + 0.08) ** 2) * 6.0)
+
+    h -= river_cuts
+    h = np.minimum(h, np.roll(h, 1, axis=0))
+    h = np.minimum(h, np.roll(h, 1, axis=1))
     return h
 
 
@@ -119,14 +141,35 @@ def create_planet_surface_map(size=512, seed=42):
     base = normalize(base)
     tectonic = apply_plate_tectonics(base, strength=0.18, plates=8, seed=seed)
     volcanic = add_volcanic_features(tectonic, count=15, height_strength=0.15, seed=seed + 1)
-    eroded = simulate_erosion(volcanic, iterations=12, talus=0.012)
+    rivered = carve_rivers(volcanic, seed=seed + 2, strength=0.05)
+    eroded = simulate_erosion(rivered, iterations=14, talus=0.012)
     final = normalize(eroded)
     return final
 
 
+def create_planet_colormap():
+    from matplotlib.colors import LinearSegmentedColormap
+
+    colors = [
+        (0.00, "#04182b"),
+        (0.10, "#0a3662"),
+        (0.20, "#1d6fcf"),
+        (0.32, "#82b5ec"),
+        (0.40, "#d9d6c4"),
+        (0.50, "#9fb46f"),
+        (0.65, "#5a7a49"),
+        (0.78, "#7b663c"),
+        (0.88, "#b2996b"),
+        (0.97, "#ded6dc"),
+        (1.00, "#ffffff"),
+    ]
+    return LinearSegmentedColormap.from_list("planet_terrain", colors)
+
+
 def plot_surface_map(heightmap, filename="planet_surface_map.png"):
+    cmap = create_planet_colormap()
     plt.figure(figsize=(10, 10), dpi=120)
-    plt.imshow(heightmap, cmap="terrain", origin="lower")
+    plt.imshow(heightmap, cmap=cmap, origin="lower")
     plt.axis("off")
     plt.title("Simulated Planetary Surface")
     plt.tight_layout()
