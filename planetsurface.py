@@ -165,20 +165,27 @@ def create_planet_surface_map(size=512, seed=42):
     detailed = add_surface_detail(eroded, seed=seed + 3, strength=0.028)
     shadowed = apply_ridge_shadows(detailed, light_angle=np.pi * 0.42, strength=0.035)
     sharpened = apply_sharpening(shadowed, strength=0.18)
-    final = normalize(sharpened)
+    contrasted = apply_contrast_boost(sharpened, factor=1.18)
+    final = normalize(contrasted)
     return final
 
 
-def apply_sharpening(heightmap, strength=0.18):
+def apply_sharpening(heightmap, strength=0.28):
     blurred = (
-        heightmap
+        heightmap * 4
         + np.roll(heightmap, 1, axis=0)
         + np.roll(heightmap, -1, axis=0)
         + np.roll(heightmap, 1, axis=1)
         + np.roll(heightmap, -1, axis=1)
-    ) / 5.0
+    ) / 8.0
     detail = heightmap - blurred
-    return np.clip(heightmap + detail * strength, 0.0, 1.0)
+    sharpened = heightmap + detail * strength
+    return np.clip(sharpened, 0.0, 1.0)
+
+
+def apply_contrast_boost(heightmap, factor=1.18):
+    mean = 0.5
+    return np.clip((heightmap - mean) * factor + mean, 0.0, 1.0)
 
 
 def apply_ridge_shadows(heightmap, light_angle=np.pi * 0.42, strength=0.035):
