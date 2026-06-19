@@ -163,8 +163,32 @@ def create_planet_surface_map(size=512, seed=42):
     rivered = carve_rivers(volcanic, seed=seed + 2, strength=0.05)
     eroded = simulate_erosion(rivered, iterations=14, talus=0.012)
     detailed = add_surface_detail(eroded, seed=seed + 3, strength=0.028)
-    final = normalize(detailed)
+    shadowed = apply_ridge_shadows(detailed, light_angle=np.pi * 0.42, strength=0.035)
+    sharpened = apply_sharpening(shadowed, strength=0.18)
+    final = normalize(sharpened)
     return final
+
+
+def apply_sharpening(heightmap, strength=0.18):
+    blurred = (
+        heightmap
+        + np.roll(heightmap, 1, axis=0)
+        + np.roll(heightmap, -1, axis=0)
+        + np.roll(heightmap, 1, axis=1)
+        + np.roll(heightmap, -1, axis=1)
+    ) / 5.0
+    detail = heightmap - blurred
+    return np.clip(heightmap + detail * strength, 0.0, 1.0)
+
+
+def apply_ridge_shadows(heightmap, light_angle=np.pi * 0.42, strength=0.035):
+    dy, dx = np.gradient(heightmap)
+    lx = np.cos(light_angle)
+    ly = np.sin(light_angle)
+    illumination = dx * lx + dy * ly
+    dark = np.clip(-illumination, 0.0, 1.0) * strength
+    bright = np.clip(illumination, 0.0, 1.0) * (strength * 0.25)
+    return heightmap - dark + bright
 
 
 def create_planet_colormap():
